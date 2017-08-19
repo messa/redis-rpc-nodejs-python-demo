@@ -2,10 +2,11 @@
 
 import argparse
 import logging
+from reprlib import repr as smart_repr
+import simplejson as json
+import sys
 from time import time, sleep
 from time import monotonic as monotime
-import simplejson as json
-from reprlib import repr as smart_repr
 
 import redis
 
@@ -74,7 +75,11 @@ def main():
     logger.debug('req_key: %r', req_key)
 
     while True:
-        data = r.blpop(req_key, 10)
+        try:
+            data = r.blpop(req_key, 10)
+        except KeyboardInterrupt as e:
+            # do not make too verbose traceback
+            sys.exit('{!r} while redis blpop'.format(e))
         if data is None:
             continue
         key, value = data
